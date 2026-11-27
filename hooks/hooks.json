@@ -1,0 +1,51 @@
+{
+  "description": "Keeps runway's output folders out of git and points to /runway:setup where runway is not set up, formats and lints each file Claude writes or edits, blocks destructive shell commands and pushes to the base branch (the user runs those themselves) and PRs opened outside /runway:ship and /runway:epic-plan, and keeps Claude working (up to three tries in a row) until the verify command passes when the session has changed the working tree, unless Claude stops to ask a question.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/post-edit.mjs\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/guard-bash.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/stop-gate.mjs\"",
+            "timeout": 900
+          }
+        ]
+      }
+    ]
+  }
+}

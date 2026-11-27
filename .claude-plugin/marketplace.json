@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "runway",
+  "description": "The runway plugin for Claude Code.",
+  "owner": {
+    "name": "hinoahlee"
+  },
+  "plugins": [
+    {
+      "name": "runway",
+      "description": "Epics built in slices on one branch and shipped as one reviewed PR, specs, test-first implementation on a branch, browser verification, and guard and quality hooks.",
+      "category": "development",
+      "source": "./"
+    }
+  ]
+}

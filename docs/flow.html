@@ -1,0 +1,169 @@
+<!doctype html>
+<!-- runway's flows, step by step: what you run, what is in context, and which skills, agents, scripts and hooks take
+     part. Open it in a browser; it needs no internet. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>runway flows</title>
+<style>
+  :root {
+    --bg: #ffffff; --card: #faf9f5; --text: #2c2c2a; --muted: #6b6a65; --line: #d3d1c7;
+    --you-bg: #faeeda; --you-fg: #633806; --skill-bg: #eeedfe; --skill-fg: #3c3489;
+    --agent-bg: #e1f5ee; --agent-fg: #085041; --script-bg: #faece7; --script-fg: #712b13;
+    --file-bg: #f1efe8; --file-fg: #444441; --gh-bg: #24292f; --gh-fg: #f6f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1f1e1d; --card: #262624; --text: #f1efe8; --muted: #a8a69d; --line: #444441;
+      --you-bg: #633806; --you-fg: #faeeda; --skill-bg: #3c3489; --skill-fg: #eeedfe;
+      --agent-bg: #085041; --agent-fg: #e1f5ee; --script-bg: #712b13; --script-fg: #faece7;
+      --file-bg: #444441; --file-fg: #f1efe8; --gh-bg: #f6f8fa; --gh-fg: #24292f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text);
+         font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 14px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+  h2 small { font-weight: 400; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); }
+  .title { font-weight: 600; margin-bottom: 4px; }
+  .row { display: grid; grid-template-columns: 92px 1fr; gap: 8px; padding: 3px 0; }
+  .k { color: var(--muted); font-size: 12px; padding-top: 2px; }
+  .arrow { text-align: center; color: var(--muted); font-size: 12px; margin: 6px 0; }
+  .t { display: inline-block; border-radius: 6px; padding: 0 6px; margin: 1px 3px 1px 0;
+       font: 12px/1.7 ui-monospace, "Cascadia Code", Consolas, monospace; white-space: nowrap; }
+  .you { background: var(--you-bg); color: var(--you-fg); }
+  .skill { background: var(--skill-bg); color: var(--skill-fg); }
+  .agent { background: var(--agent-bg); color: var(--agent-fg); }
+  .script { background: var(--script-bg); color: var(--script-fg); }
+  .file { background: var(--file-bg); color: var(--file-fg); }
+  .gh { background: var(--gh-bg); color: var(--gh-fg); }
+  .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 20px; align-items: start; }
+  .option { border: 1px dashed var(--line); border-radius: 14px; padding: 12px; }
+  .option h2 { margin-top: 2px; }
+  .hooks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .none { color: var(--muted); }
+  .note { color: var(--muted); font-size: 13px; margin: 10px 2px 0; }
+  @media (max-width: 520px) { .options { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; gap: 0; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>runway flows</h1>
+  <p class="lead">What runs at each step: what you run, what is in context, and which skills, agents, scripts and hooks take part. An epic is built in slices on one branch, <span class="t file">epic/&lt;epic-name&gt;</span>, and lands as one PR. runway never merges: you do, after your review. Every piece on its own: <a href="inventory.html">runway inventory</a>.</p>
+  <div class="legend">
+    <span class="t you">you</span><span class="t skill">skill</span><span class="t agent">agent / Claude session</span>
+    <span class="t script">script / hook</span><span class="t file">file</span><span class="t gh">GitHub</span>
+  </div>
+
+  <h2>0. Every session <small>shared by every flow, including each unattended session</small></h2>
+  <div class="card">
+    <div class="row"><span class="k">You run</span><span><span class="t you">claude</span> or a desktop-app session in a repository where runway is enabled</span></div>
+    <div class="row"><span class="k">In context</span><span><span class="t file">~/.claude/CLAUDE.md</span><span class="t file">CLAUDE.md</span><span class="t file">.claude/settings.json</span> + the names and descriptions of runway's skills and agents</span></div>
+    <div class="row"><span class="k">Starts</span><span>the Playwright browser server (<span class="t file">.mcp.json</span>)</span></div>
+    <div class="row"><span class="k">Hooks</span><span><span class="t script">session-start.mjs</span>: keeps runway's output out of git; without <span class="t file">runway.json</span>, tells you to run <span class="t you">/runway:setup</span></span></div>
+  </div>
+
+  <h2>Set up <small>once per repository (or per clone)</small></h2>
+  <div class="card">
+    <div class="row"><span class="k">You run</span><span><span class="t you">/runway:setup</span>, approving each change</span></div>
+    <div class="row"><span class="k">Script</span><span><span class="t script">doctor.mjs</span>: Node, git, <span class="t gh">gh</span>, base branch rules, CLAUDE.md, REVIEW.md, lint rules</span></div>
+    <div class="row"><span class="k">Skill</span><span><span class="t skill">setup</span></span></div>
+    <div class="row"><span class="k">Output</span><span><span class="t file">.claude/runway.json</span> (shared) or <span class="t file">.git/runway.json</span> (this clone only), and any gaps filled</span></div>
+  </div>
+
+  <h2>Plan the epic <small>both options start here</small></h2>
+  <div class="card">
+    <div class="row"><span class="k">You run</span><span><span class="t you">/runway:epic-plan &lt;brief&gt;</span> in any session</span></div>
+    <div class="row"><span class="k">Script</span><span><span class="t script">prepare-branch.mjs</span> creates <span class="t file">epic/&lt;epic-name&gt;</span> from the base branch in your checkout (a clean tree only)</span></div>
+    <div class="row"><span class="k">In context</span><span>your brief, <span class="t file">CLAUDE.md</span> + the docs it links, <span class="t file">templates/epic.md</span>, the explorer's summary</span></div>
+    <div class="row"><span class="k">Skill</span><span><span class="t skill">epic-plan</span></span></div>
+    <div class="row"><span class="k">Agents</span><span><span class="t agent">explorer</span> (Haiku, read-only)</span></div>
+    <div class="row"><span class="k">Output</span><span><span class="t file">docs/epics/&lt;epic-name&gt;.md</span> with its slices + a skipped e2e test. <span class="t you">you approve</span>, then the branch is pushed and a <span class="t gh">draft PR</span> opened. Choose option A or B</span></div>
+  </div>
+
+  <div class="options">
+    <section class="option">
+      <h2>Option A · slice by slice, with you <small>repeat A1 per slice, then A2</small></h2>
+
+      <div class="card">
+        <div class="title">A1 · Build the next slice</div>
+        <div class="row"><span class="k">You run</span><span><span class="t you">/runway:epic-next</span>, best in a new session <span class="none">(add the epic name only if several epics are in progress)</span></span></div>
+        <div class="row"><span class="k">Script</span><span><span class="t script">prepare-branch.mjs</span> switches your checkout to the epic's branch and catches it up</span></div>
+        <div class="row"><span class="k">In context</span><span>the epic file on the branch: the slice row, interfaces, decisions; <span class="t file">CLAUDE.md</span> + docs</span></div>
+        <div class="row"><span class="k">Skill</span><span><span class="t skill">epic-next</span>→<span class="t skill">spec</span>→<span class="t skill">implement</span>→<span class="t skill">verify</span>, with <span class="t skill">conventions</span></span></div>
+        <div class="row"><span class="k">Agents</span><span><span class="t agent">test-writer</span> (Opus) per test file; <span class="t agent">reviewer</span><span class="t agent">security-reviewer</span> (Opus; by risk and paths) on the slice's commits</span></div>
+        <div class="row"><span class="k">Hooks</span><span>all four (below)</span></div>
+        <div class="row"><span class="k">Output</span><span>the base branch merged in, <span class="t you">you approve the spec</span> (skipped for a low-risk slice), tests + code committed per test file, screenshots, the slice marked done and pushed; CI runs on the <span class="t gh">draft PR</span></span></div>
+      </div>
+      <div class="arrow">↓ after the last slice</div>
+
+      <div class="card">
+        <div class="title">A2 · Ship the epic</div>
+        <div class="row"><span class="k">You run</span><span><span class="t you">/runway:ship</span></span></div>
+        <div class="row"><span class="k">In context</span><span>the epic file, <span class="t file">templates/pr-body.md</span>; reviewers read <span class="t file">REVIEW.md</span> + the whole diff against the base branch</span></div>
+        <div class="row"><span class="k">Skill</span><span><span class="t skill">ship</span>, then <span class="t skill">verify</span> again after fixes</span></div>
+        <div class="row"><span class="k">Agents</span><span><span class="t agent">reviewer</span><span class="t agent">security-reviewer</span> in parallel</span></div>
+        <div class="row"><span class="k">Output</span><span>the PR filled in (criteria per slice, dev actions, follow-ups, at most one proposed line for the docs) and <span class="t gh">ready for review</span>. <span class="t you">you review and merge</span>: it deploys</span></div>
+      </div>
+      <p class="note"><b>A change that fits in one PR</b> skips the epic: <span class="t you">/runway:spec &lt;task&gt;</span> (a branch, criteria, approval), <span class="t you">/clear</span>, <span class="t you">/runway:implement</span> (Sonnet: tests, code, verify), then <span class="t you">/runway:ship</span>, which opens the PR (its security review runs only for medium or high risk, or when the diff touches <span class="t file">securityPaths</span>).</p>
+    </section>
+
+    <section class="option">
+      <h2>Option B · unattended <small>B1 once; the runner repeats B2–B3 per slice, then B4</small></h2>
+
+      <div class="card">
+        <div class="title">B1 · Start the runner</div>
+        <div class="row"><span class="k">You run</span><span><span class="t you">/runway:epic-auto</span>, read the warning, reply <span class="t you">yes, run it</span> <span class="none">(add the epic name only if several epics are in progress)</span></span></div>
+        <div class="row"><span class="k">In context</span><span>the epic file on the branch, the base branch's rules on <span class="t gh">GitHub</span></span></div>
+        <div class="row"><span class="k">Skill</span><span><span class="t skill">epic-auto</span></span></div>
+        <div class="row"><span class="k">Script</span><span><span class="t script">epic-auto.mjs</span> in the background: plain code, no model. Status + log in <span class="t file">.git/runway/</span></span></div>
+        <div class="row"><span class="k">Output</span><span>a running runner; check it with <span class="t you">/runway:epic-auto status</span></span></div>
+      </div>
+      <div class="arrow">↓ the runner takes over</div>
+
+      <div class="card">
+        <div class="title">B2 · Build a slice</div>
+        <div class="row"><span class="k">Started by</span><span><span class="t script">epic-auto.mjs</span> in your checkout, switched to the epic's branch, after merging the base branch in (leave the checkout alone while it runs)</span></div>
+        <div class="row"><span class="k">In context</span><span>a fresh <span class="t agent">headless Claude</span> (your model): <span class="t file">CLAUDE.md</span>, runway, the unattended rules (every approval given)</span></div>
+        <div class="row"><span class="k">Skill</span><span>as in A1: <span class="t skill">epic-next</span>→<span class="t skill">spec</span>→<span class="t skill">implement</span>→<span class="t skill">verify</span></span></div>
+        <div class="row"><span class="k">Agents</span><span><span class="t agent">test-writer</span><span class="t agent">reviewer</span><span class="t agent">security-reviewer</span> (+ <span class="t agent">explorer</span>)</span></div>
+        <div class="row"><span class="k">Output</span><span>the slice done, committed and pushed to <span class="t file">epic/&lt;epic-name&gt;</span></span></div>
+      </div>
+      <div class="arrow">↓</div>
+
+      <div class="card">
+        <div class="title">B3 · CI</div>
+        <div class="row"><span class="k">Started by</span><span><span class="t script">epic-auto.mjs</span>, waiting with <span class="t gh">gh pr checks</span></span></div>
+        <div class="row"><span class="k">In context</span><span>on a failure or conflict: a fresh <span class="t agent">headless Claude</span> with the failing log; it fixes and pushes</span></div>
+        <div class="row"><span class="k">Output</span><span>green CI, or a stop after 3 failed fixes; then the next slice (B2)</span></div>
+      </div>
+      <div class="arrow">↓ every slice done</div>
+
+      <div class="card">
+        <div class="title">B4 · Ship the epic</div>
+        <div class="row"><span class="k">Started by</span><span><span class="t script">epic-auto.mjs</span>: a <span class="t agent">headless Claude</span> runs <span class="t skill">ship</span>, as in A2; then CI once more</span></div>
+        <div class="row"><span class="k">Output</span><span>the PR <span class="t gh">ready for review</span>; the runner stops. <span class="t you">you review and merge</span></span></div>
+      </div>
+
+      <p class="note"><b>When it stops</b> (a session reporting something only you can do, CI it cannot fix, a diverged branch): the reason is in
+        <span class="t file">.git/runway/epic-auto-&lt;epic-name&gt;.json</span>. Fix it and say <span class="t you">proceed</span>.
+        A usage limit only pauses it until the reset. Nothing is ever merged by the runner.</p>
+    </section>
+  </div>
+
+  <h2>Hooks <small>in every session, including headless ones</small></h2>
+  <div class="hooks">
+    <div class="card"><div class="title"><span class="t script">guard-bash.mjs</span></div><span class="k">before a shell command</span><div>blocks force pushes, pushing to or deleting the base branch, reset --hard, clean -f, discarding the whole tree, stash drop, DROP, ORM resets, skipped git hooks, gh pr merge, gh pr create outside ship and epic-plan, rm -rf of root/home. A speed bump, not a security boundary</div></div>
+    <div class="card"><div class="title"><span class="t script">post-edit.mjs</span></div><span class="k">after a file edit</span><div>formats and lints the file with the repository's own Biome or Prettier + ESLint; leftover errors go back to Claude</div></div>
+    <div class="card"><div class="title"><span class="t script">stop-gate.mjs</span></div><span class="k">before Claude stops</span><div>with any changes (new files too) since the session started, runs the verify command; a failure keeps Claude working, up to three tries in a row. A <span class="t file">RUNWAY-ASK:</span> line lets Claude stop to ask you</div></div>
+    <div class="card"><div class="title"><span class="t script">session-start.mjs</span></div><span class="k">when a session starts</span><div>keeps .claude/screenshots, .claude/logs, .runway/specs and .playwright-mcp out of git; points to /runway:setup where needed</div></div>
+  </div>
+</main>
+</body>
+</html>
