@@ -1,0 +1,22 @@
+{
+  "name": "runway",
+  "displayName": "Runway",
+  "version": "0.1.0",
+  "description": "An AI engineering workflow for Claude Code: plan a large feature as an epic built in slices on one branch, spec each slice, implement test-first in a worktree, verify in a real browser, and ship one reviewed PR, by hand or unattended. It never merges. Hooks format and lint every edit, block destructive shell commands, and keep Claude working (up to three tries) until the repository's verify command passes.",
+  "author": {
+    "name": "hinoahlee"
+  },
+  "repository": "https://github.com/hinoahlee/runway",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "epic",
+    "spec",
+    "tdd",
+    "code-review",
+    "security-review",
+    "verify",
+    "hooks",
+    "unattended"
+  ]
+}

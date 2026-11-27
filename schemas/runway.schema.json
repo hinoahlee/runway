@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "runway settings",
+  "description": "A repository's runway settings: .claude/runway.json (committed) or <git-common-dir>/runway.json (this clone only).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verifyCommand"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "verifyCommand": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Runs lint, typecheck and unit tests (no e2e), fails fast and needs no network. The Stop hook and the verify skill run it."
+    },
+    "epicsDir": {
+      "type": "string",
+      "pattern": "^(?![\\\\/]|[A-Za-z]:)(?!(.*[\\\\/])?\\.\\.([\\\\/]|$)).*\\S",
+      "default": "docs/epics",
+      "description": "Where epic plans live, relative to the repository root."
+    },
+    "baseBranch": {
+      "type": "string",
+      "pattern": "^(?!-)[\\w./-]+$",
+      "default": "main",
+      "description": "The branch PRs target, reviews compare against, and worktrees start from."
+    },
+    "model": {
+      "type": "string",
+      "pattern": "^(?!-)[\\w.\\[\\]-]+$",
+      "default": "sonnet",
+      "description": "The model epic-auto's headless sessions run on: an alias (sonnet, opus, haiku) or a full model id. A model inside claudeSettings wins over it."
+    },
+    "reviewModel": {
+      "type": "string",
+      "pattern": "^(?!-)[\\w.\\[\\]-]+$",
+      "default": "opus",
+      "description": "The model the code and security reviewers run on, for each slice and in /runway:ship. \"inherit\" uses the session's model."
+    },
+    "claudeSettings": {
+      "description": "Extra Claude Code settings for epic-auto's headless sessions, passed with --settings: a path to a settings file or an inline object (for example a sandbox configuration).",
+      "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "object" }]
+    },
+    "testPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1, "pattern": "\\S" },
+      "description": "Globs for test files (default: *.test.*, *.spec.*, and test, tests, __tests__ and e2e folders). Commits must keep these apart from code, and tests come first."
+    },
+    "securityPaths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "pattern": "\\S" },
+      "description": "Globs over repository-relative paths (** spans folders, * stays in one, {a,b} is either, case ignored). A change touching one gets the security review even when the spec's risk is low. Replaces runway's default list (routes and handlers, auth, database and migrations, config and env, infra, CI, Docker, dependency manifests and lockfiles); [] means risk alone decides."
+    }
+  }
+}

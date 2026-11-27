@@ -1,0 +1,104 @@
+<!doctype html>
+<!-- Everything runway ships: commands, the skill Claude uses on its own, agents, hooks, scripts, templates and the
+     browser server. Same colours as flow.html. Open it in a browser; it needs no internet. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>runway inventory</title>
+<style>
+  :root {
+    --bg: #ffffff; --card: #faf9f5; --text: #2c2c2a; --muted: #6b6a65; --line: #d3d1c7;
+    --you-bg: #faeeda; --you-fg: #633806; --skill-bg: #eeedfe; --skill-fg: #3c3489;
+    --agent-bg: #e1f5ee; --agent-fg: #085041; --script-bg: #faece7; --script-fg: #712b13;
+    --file-bg: #f1efe8; --file-fg: #444441; --gh-bg: #24292f; --gh-fg: #f6f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1f1e1d; --card: #262624; --text: #f1efe8; --muted: #a8a69d; --line: #444441;
+      --you-bg: #633806; --you-fg: #faeeda; --skill-bg: #3c3489; --skill-fg: #eeedfe;
+      --agent-bg: #085041; --agent-fg: #e1f5ee; --script-bg: #712b13; --script-fg: #faece7;
+      --file-bg: #444441; --file-fg: #f1efe8; --gh-bg: #f6f8fa; --gh-fg: #24292f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text);
+         font: 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 14px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+  h2 small { font-weight: 400; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); }
+  .title { font-weight: 600; margin-bottom: 4px; }
+  .k { color: var(--muted); font-size: 12px; display: block; margin-bottom: 4px; }
+  .t { display: inline-block; border-radius: 6px; padding: 0 6px; margin: 1px 3px 1px 0;
+       font: 12px/1.7 ui-monospace, "Cascadia Code", Consolas, monospace; white-space: nowrap; }
+  .you { background: var(--you-bg); color: var(--you-fg); }
+  .skill { background: var(--skill-bg); color: var(--skill-fg); }
+  .agent { background: var(--agent-bg); color: var(--agent-fg); }
+  .script { background: var(--script-bg); color: var(--script-fg); }
+  .file { background: var(--file-bg); color: var(--file-fg); }
+  .gh { background: var(--gh-bg); color: var(--gh-fg); }
+  .note { color: var(--muted); font-size: 13px; margin: 10px 2px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>runway inventory</h1>
+  <p class="lead">Everything the plugin ships, and what each piece does. How they work together, step by step: <a href="flow.html">runway flows</a>.</p>
+  <div class="legend">
+    <span class="t you">you</span><span class="t skill">skill</span><span class="t agent">agent</span>
+    <span class="t script">script / hook</span><span class="t file">file</span><span class="t gh">GitHub</span>
+  </div>
+
+  <h2>Commands <small>skills you run</small></h2>
+  <div class="grid">
+    <div class="card"><div class="title"><span class="t skill">/runway:setup</span></div>Checks what runway needs in this repository and, with your approval at each step, writes <span class="t file">runway.json</span> and fills the gaps: a Checks section in <span class="t file">CLAUDE.md</span>, <span class="t file">REVIEW.md</span>, <span class="t file">.worktreeinclude</span>, the epics folder. Tells you what runway can't do here.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:epic-plan &lt;brief&gt;</span></div>Plans an epic: an epic file (data model, interfaces, release, slices) and a skipped end-to-end test, reviewed with you, then pushed on <span class="t file">epic/&lt;epic-name&gt;</span> with a <span class="t gh">draft PR</span>.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:epic-next</span></div>Builds the next slice of the epic in progress (add its name if there are several): merges the base branch in, spec, implement, verify, slice review, then marks it done and pushes.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:epic-auto</span></div>Builds every remaining slice unattended, then ships the PR ready for review. <span class="t skill">/runway:epic-auto status</span> and <span class="t skill">/runway:epic-auto stop</span> check on it or stop it.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:spec &lt;task&gt; [--go]</span></div>Numbered acceptance criteria, a file-level plan and a risk level, in a fresh worktree; waits for your approval (unless <span class="t file">--go</span>), then runs implement.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:implement</span></div>Test-first, one test file and its criteria at a time, a commit per green step; then runs verify. Run it yourself after a <span class="t you">/clear</span>: it works from the saved spec in <span class="t file">.runway/specs/</span> on Sonnet at medium effort. Approving inside spec also runs it, on the session's model.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:verify</span></div>The verify command, the relevant e2e tests, and each criterion checked in a headless browser, one Playwright script per journey, with screenshots. Loops until green.</div>
+    <div class="card"><div class="title"><span class="t skill">/runway:ship</span></div>Code review, plus a security review for epics, medium or high risk, or a diff touching <span class="t file">securityPaths</span>; fixes, verify again, then opens the <span class="t gh">PR</span> (or, for an epic, fills in its PR and marks it ready). If something went wrong more than once, the PR proposes one line for the repository's docs (or a check that would catch it); you decide. Never merges.</div>
+  </div>
+
+  <h2>Skill Claude uses on its own</h2>
+  <div class="grid">
+    <div class="card"><div class="title"><span class="t skill">conventions</span></div>Before Claude writes code in an area, sends it to the repository's <span class="t file">CLAUDE.md</span>, the docs it links, <span class="t file">REVIEW.md</span> and neighbouring files, and keeps comments to the few the code can't do without (never history or decisions).</div>
+  </div>
+
+  <h2>Agents <small>each starts with a fresh context</small></h2>
+  <div class="grid">
+    <div class="card"><div class="title"><span class="t agent">explorer</span></div><span class="k">Haiku · read only</span>Maps the code a task touches and the closest pattern to copy. Used by epic-plan and spec.</div>
+    <div class="card"><div class="title"><span class="t agent">test-writer</span></div><span class="k">Opus · reads, writes tests, runs them</span>Writes tests from the criteria that fail for the right reason, and commits them before any code. Used by implement.</div>
+    <div class="card"><div class="title"><span class="t agent">test-auditor</span></div><span class="k">Sonnet · breaks code, runs tests, restores</span>Breaks the code behind each criterion and reports tests that still pass. Used by ship for epics and medium or high risk.</div>
+    <div class="card"><div class="title"><span class="t agent">reviewer</span></div><span class="k">your model · reads, runs git and tests</span>Checks a diff against the criteria, <span class="t file">REVIEW.md</span> and the epic; reports verified findings only, no style or minor points. Used per slice and by ship.</div>
+    <div class="card"><div class="title"><span class="t agent">security-reviewer</span></div><span class="k">your model · reads, runs git and tests</span>Checks authorization, input validation, injection, secrets and data exposure. Used per slice and by ship when the risk or the paths touched call for it, and always by ship for an epic.</div>
+  </div>
+
+  <h2>Hooks <small>run by Claude Code in every session, including unattended ones</small></h2>
+  <div class="grid">
+    <div class="card"><div class="title"><span class="t script">session-start.mjs</span></div><span class="k">when a session starts</span>Keeps runway's output (<span class="t file">.claude/worktrees/</span> <span class="t file">.claude/screenshots/</span> <span class="t file">.claude/logs/</span> <span class="t file">.runway/specs/</span> <span class="t file">.playwright-mcp/</span>) out of git through <span class="t file">.git/info/exclude</span>. Where runway isn't set up, says once to run <span class="t skill">/runway:setup</span>; reports invalid settings every time.</div>
+    <div class="card"><div class="title"><span class="t script">guard-bash.mjs</span></div><span class="k">before a shell command</span>Blocks force pushes, pushing to or deleting the base branch, <span class="t file">reset --hard</span>, <span class="t file">clean -f</span>, discarding the working tree, dropping stashes, <span class="t file">DROP TABLE</span>, ORM resets, skipping git hooks, <span class="t gh">gh pr merge</span>, <span class="t gh">gh pr create</span> outside ship and epic-plan, and wiping a root or home folder. A speed bump, not a security boundary.</div>
+    <div class="card"><div class="title"><span class="t script">post-edit.mjs</span></div><span class="k">after a file edit</span>Formats and lints the file with the repository's own Biome, or Prettier + ESLint (only when the repository configures them); errors left after safe fixes go back to Claude.</div>
+    <div class="card"><div class="title"><span class="t script">stop-gate.mjs</span></div><span class="k">when Claude tries to stop</span>With any changes, runs the verify command and sends Claude back to work until it passes, up to three tries in a row; then Claude may stop and you're told. A tree that already passed, unchanged since, isn't verified again. Changes that were already there when the session started (your own work in progress) don't count, and Claude may stop to ask you something by ending its message with a <span class="t file">RUNWAY-ASK:</span> line.</div>
+  </div>
+  <p class="note">The stop and edit hooks do nothing in a repository without a runway.json.</p>
+
+  <h2>Scripts, templates and the browser server</h2>
+  <div class="grid">
+    <div class="card"><div class="title"><span class="t script">config.mjs</span></div>Finds and validates the repository's <span class="t file">runway.json</span>; the skills run it to read the settings, and ship runs it with <span class="t file">--security-files</span> to decide on the security review.</div>
+    <div class="card"><div class="title"><span class="t script">doctor.mjs</span></div>The checks behind <span class="t skill">/runway:setup</span> and epic-auto's branch-rules warning.</div>
+    <div class="card"><div class="title"><span class="t script">prepare-worktree.mjs</span></div>Run first by spec, epic-plan and epic-next (which then run the verify command once, so a base branch that is already broken stops the work instead of becoming Claude's problem): moves a main-checkout session into a fresh worktree, never leaves an existing one, puts epic work on <span class="t file">epic/&lt;epic-name&gt;</span>, and removes worktrees whose <span class="t gh">PR</span> is merged or closed and whose commits are pushed.</div>
+    <div class="card"><div class="title"><span class="t script">epic-auto.mjs</span> <span class="t script">epic-auto-lib.mjs</span></div>The unattended runner (plain code, no model): starts headless Claude sessions, waits for <span class="t gh">CI</span>, waits out usage limits. Never merges. The lib holds its prompts, slice parsing and the tools its sessions may use.</div>
+    <div class="card"><div class="title"><span class="t file">schemas/runway.schema.json</span></div>The schema of <span class="t file">runway.json</span>.</div>
+    <div class="card"><div class="title"><span class="t file">templates/</span></div>The epic file, the PR description, a starter <span class="t file">REVIEW.md</span>, and a <span class="t gh">GitHub ruleset</span> that blocks force pushes, deletion and pushes without a PR on the default branch.</div>
+    <div class="card"><div class="title"><span class="t file">.mcp.json</span></div>The Playwright browser server (headless, pinned version) that verify drives. It starts in every session where runway is enabled, one reason to enable runway per project.</div>
+  </div>
+</main>
+</body>
+</html>
