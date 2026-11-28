@@ -249,6 +249,56 @@ describe("prompts and tools", () => {
 		// verify stops the dev server it started, on every OS.
 		for (const tool of ["Bash(taskkill:*)", "Bash(kill:*)", "Bash(pkill:*)", "Bash(lsof:*)"]) assert.ok(CODING_TOOLS.includes(tool), tool);
 	});
+
+	// Whether every part of a shell command (split on pipes, `&&`, `||` and `;`, redirections dropped) matches a
+	// `Bash(<prefix>:*)` entry, the way Claude Code checks a compound command against --allowedTools.
+	const allowed = (command) =>
+		command
+			.split(/\|\||&&|[|;]/)
+			.map((part) => part.replace(/\d?>&?\s*\S+/g, "").trim())
+			.filter(Boolean)
+			.every((part) =>
+				CODING_TOOLS.some((tool) => {
+					const prefix = tool.match(/^Bash\((.+):\*\)$/)?.[1];
+					return prefix !== undefined && (part === prefix || part.startsWith(`${prefix} `));
+				}),
+			);
+
+	test("headless sessions may run every shell command the skills and agents tell them to", () => {
+		// Each command the skills and agents that unattended sessions run (epic-next, spec, implement, verify, ship
+		// and the five agents) instruct, as written there, with the verify command filled in. Add new ones here.
+		const instructed = [
+			'node "/runway/scripts/config.mjs" --security-files origin/main...HEAD',
+			'node "/runway/scripts/prepare-worktree.mjs" epic-notes --base main',
+			"mkdir -p .claude/logs; pnpm verify > .claude/logs/verify.log 2>&1; echo \"exit $?\"; tail -n 3 .claude/logs/verify.log",
+			"tail -n 60 .claude/logs/verify.log",
+			"grep -n FAIL .claude/logs/verify.log",
+			"git diff origin/main...HEAD --stat",
+			"git fetch && git for-each-ref --format=\"%(refname:short)\" refs/remotes/origin/epic/",
+			"git status --porcelain",
+			"git checkout -- src/app.ts",
+			"git add src/app.test.ts",
+			"git push -u origin HEAD",
+			"curl --retry 60 --retry-delay 2 --retry-connrefused -sf -o /dev/null http://localhost:3000",
+			"netstat -ano",
+			"taskkill /PID 123 /T /F",
+			"lsof -ti :3000",
+			"kill 123",
+			'pkill -f "pnpm dev"',
+			"gh pr view --json number,isDraft,title",
+			'gh pr edit 7 --title "feat: notes" --body-file /tmp/body.md',
+			"gh pr ready 7",
+			'gh pr create --base main --title "feat: notes" --body-file /tmp/body.md',
+			// What the test-auditor ran in a real ship session, denied for `tail` before it was allowed.
+			"cd /repo && git status --porcelain && git diff --stat origin/main...HEAD | tail -60 && ls .runway/specs/epic/notes",
+			"pnpm vitest run src/app.test.ts > .claude/logs/audit.log 2>&1; echo \"exit $?\"; head -n 40 .claude/logs/audit.log",
+			"git diff origin/main...HEAD | wc -l",
+		];
+		for (const command of instructed) assert.ok(allowed(command), command);
+		// The matcher itself: a command outside the list is refused.
+		assert.ok(!allowed("git status | sed -i s/a/b/ file"));
+		assert.ok(!allowed("gh pr merge 7"));
+	});
 });
 
 describe("models, cost and strays", () => {

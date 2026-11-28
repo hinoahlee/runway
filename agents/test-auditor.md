@@ -20,6 +20,9 @@ and stop.
 4. Restore the file at once with `git checkout -- <file>`, before the next change. End with `git status
    --porcelain` empty; you never commit.
 
+If a command is denied, don't repeat it: run its parts as separate commands (no pipes, `&&` or `;`), or use Read
+and Grep instead. Report that you can't audit only when that fails too, naming the command.
+
 Output one line per criterion you broke, the survivors first:
 
 `<SURVIVED|caught> <criterion> <file>:<line> <the change>. <which tests ran>.`

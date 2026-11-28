@@ -24,6 +24,12 @@ export const CODING_TOOLS = [
 	"Bash(cd:*)",
 	"Bash(ls:*)",
 	"Bash(cat:*)",
+	// Read-only text tools the skills and agents pipe output through (verify's `echo "exit $?"; tail -n 3 <log>`).
+	"Bash(head:*)",
+	"Bash(tail:*)",
+	"Bash(grep:*)",
+	"Bash(wc:*)",
+	"Bash(echo:*)",
 	"Bash(mkdir:*)",
 	"Bash(cp:*)",
 	"Bash(mv:*)",
@@ -68,6 +74,8 @@ user approved the whole run in advance. Nothing you do is merged: a developer re
   code. Never write tests yourself. A commit with no testable behaviour says \`[no-tests] <why>\`.
 - If a command writes files outside this worktree, redo it with an explicit path so they land here, and name the
   stray files in your final message. Don't delete them or stop for them.
+- If a command is denied, don't repeat it: run its parts as separate commands (no pipes, \`&&\` or \`;\`), or use
+  Read, Grep and Glob instead. Stop for it only when that fails too, naming the command.
 - If dependencies are missing in this worktree, install them with the repository's package manager and lockfile.
 - Never merge a PR, force push, or push to any branch but this one.`;
 
