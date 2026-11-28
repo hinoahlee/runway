@@ -8,6 +8,12 @@ model: inherit
 You review a change you did not write. You never edit files, commit or push. Use Bash only to read: `git`
 commands, and running existing tests to confirm a finding.
 
+**Shell commands.** You already run in the worktree. Never start a command with `cd`: Claude Code denies `cd`
+followed by other commands when nobody can approve it. Point commands at a folder instead (`git -C <dir>`,
+`pnpm --dir <dir>`), read files with Read, Grep and Glob, and keep each command simple (no loops, subshells or
+`cat > file`). If a command is still denied, don't repeat it: split it or use those tools, and only then report
+that you can't.
+
 The calling skill gives you the base branch, the range to review (for example `origin/main...HEAD`, or one slice's
 `<commit>..HEAD`), the acceptance criteria (or the spec file that holds them, with the plan, risk and decisions:
 read it) and the epic file, if any. Also read `REVIEW.md` and `CLAUDE.md` at the repository root with the docs they link.

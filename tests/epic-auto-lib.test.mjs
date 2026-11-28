@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { describe, test } from "node:test";
 import {
 	CODING_TOOLS,
@@ -289,8 +290,8 @@ describe("prompts and tools", () => {
 			'gh pr edit 7 --title "feat: notes" --body-file /tmp/body.md',
 			"gh pr ready 7",
 			'gh pr create --base main --title "feat: notes" --body-file /tmp/body.md',
-			// What the test-auditor ran in a real ship session, denied for `tail` before it was allowed.
-			"cd /repo && git status --porcelain && git diff --stat origin/main...HEAD | tail -60 && ls .runway/specs/epic/notes",
+			// What the test-auditor ran in a real ship session, without the leading `cd` (see the next test).
+			"git status --porcelain && git diff --stat origin/main...HEAD | tail -60 && ls .runway/specs/epic/notes",
 			"pnpm vitest run src/app.test.ts > .claude/logs/audit.log 2>&1; echo \"exit $?\"; head -n 40 .claude/logs/audit.log",
 			"git diff origin/main...HEAD | wc -l",
 		];
@@ -298,6 +299,27 @@ describe("prompts and tools", () => {
 		// The matcher itself: a command outside the list is refused.
 		assert.ok(!allowed("git status | sed -i s/a/b/ file"));
 		assert.ok(!allowed("gh pr merge 7"));
+	});
+
+	// Claude Code never auto-allows `cd <dir> && <command>`, whatever --allowedTools says, and a background agent has
+	// nobody to ask, so it is denied (`bashMiss:cd-compound-read`). In a real run that stopped ship's test-auditor
+	// and cost the reviewers and test-writers 32 denied commands.
+	test("nothing tells an unattended session or agent to start a command with cd", () => {
+		const root = new URL("../", import.meta.url);
+		const markdown = (dir) =>
+			fs
+				.readdirSync(new URL(dir, root), { recursive: true })
+				.filter((f) => String(f).endsWith(".md"))
+				.map((f) => [`${dir}${f}`, fs.readFileSync(new URL(`${dir}${f}`, root), "utf8")]);
+		for (const [file, text] of [...markdown("skills/"), ...markdown("agents/")])
+			for (const [, span] of text.matchAll(/`([^`]+)`/g)) assert.doesNotMatch(span, /^cd\s/, `${file}: ${span}`);
+
+		assert.match(unattendedPrompt("/runway", { mode: "ship" }), /Never start a shell command with `cd`/);
+		for (const [file, text] of markdown("agents/")) {
+			if (!/^tools:.*\bBash\b/m.test(text)) continue;
+			assert.match(text, /Never start a command with `cd`/, file);
+			assert.match(text, /git -C <dir>/, file);
+		}
 	});
 });
 

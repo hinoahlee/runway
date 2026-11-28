@@ -25,6 +25,7 @@ export const CODING_TOOLS = [
 	"Bash(ls:*)",
 	"Bash(cat:*)",
 	// Read-only text tools the skills and agents pipe output through (verify's `echo "exit $?"; tail -n 3 <log>`).
+	// Claude Code's own read-only check usually allows these too; listing them keeps that from being load-bearing.
 	"Bash(head:*)",
 	"Bash(tail:*)",
 	"Bash(grep:*)",
@@ -74,8 +75,11 @@ user approved the whole run in advance. Nothing you do is merged: a developer re
   code. Never write tests yourself. A commit with no testable behaviour says \`[no-tests] <why>\`.
 - If a command writes files outside this worktree, redo it with an explicit path so they land here, and name the
   stray files in your final message. Don't delete them or stop for them.
-- If a command is denied, don't repeat it: run its parts as separate commands (no pipes, \`&&\` or \`;\`), or use
-  Read, Grep and Glob instead. Stop for it only when that fails too, naming the command.
+- Never start a shell command with \`cd\`: with nobody to approve it, \`cd\` followed by other commands is denied.
+  You already run in the worktree; point commands at another folder instead (\`git -C <dir>\`, \`pnpm --dir <dir>\`).
+  Keep each command simple (no loops, subshells or \`cat > file\`: write files with Write). When you start an agent,
+  pass this rule on. If a command is still denied, don't repeat it: split it or use Read, Grep and Glob. Stop for
+  it only when that fails too, naming the command.
 - If dependencies are missing in this worktree, install them with the repository's package manager and lockfile.
 - Never merge a PR, force push, or push to any branch but this one.`;
 

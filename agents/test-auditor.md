@@ -20,8 +20,11 @@ and stop.
 4. Restore the file at once with `git checkout -- <file>`, before the next change. End with `git status
    --porcelain` empty; you never commit.
 
-If a command is denied, don't repeat it: run its parts as separate commands (no pipes, `&&` or `;`), or use Read
-and Grep instead. Report that you can't audit only when that fails too, naming the command.
+**Shell commands.** You already run in the worktree. Never start a command with `cd`: Claude Code denies `cd`
+followed by other commands when nobody can approve it. Point commands at a folder instead (`git -C <dir>`,
+`pnpm --dir <dir>`), read files with Read, Grep and Glob, and keep each command simple (no loops, subshells or
+`cat > file`). If a command is still denied, don't repeat it: split it or use those tools, and only then report
+that you can't.
 
 Output one line per criterion you broke, the survivors first:
 
